@@ -3,5 +3,5 @@
     "bracketSpacing": true,
     "tabWidht": 4,
     "trainlingComma": "es5",
-    "semi": true,
+    "semi": true
 }
