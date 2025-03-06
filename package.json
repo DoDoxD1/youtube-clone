@@ -1,0 +1,16 @@
+{
+  "name": "youtube-clone",
+  "version": "1.0.0",
+  "description": "a youtube clone",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Arihant Jain",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongo": "^0.1.0",
+    "mongoose": "^8.12.1"
+  }
+}
