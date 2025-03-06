@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "a youtube clone",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Arihant Jain",
@@ -12,5 +15,8 @@
     "express": "^4.21.2",
     "mongo": "^0.1.0",
     "mongoose": "^8.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
