@@ -49,6 +49,7 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
+// Pre is a mongoose hook
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -56,10 +57,12 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// Injecting password validation method to the userSchema(Sort of middleware)
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
+// Injecting some methods(JWT generation) to the userSchema
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {

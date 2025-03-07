@@ -1,16 +1,23 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
+import { app } from "./app.js";
 
 const PORT = process.env.PORT || 3000;
 
 dotenv.config({ path: "./env" });
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-  });
-});
 
-/* This is another approach to connect to database but it clutters the index.js
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server started on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("MONGO db connection failed !!!", error);
+  });
+
+/* This is another approach to connect to database but it clutters the index.js above method creates
+a function connectDB inside index.js file DB folder to seperate code 
 import express from "express";
 const app = express();
 ;(async()=>{

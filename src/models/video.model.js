@@ -41,6 +41,7 @@ const videoSchema = new Schema(
   { timestamps: true },
 );
 
+// Plugin is a mongoose hook
 videoSchema.plugin(mongooseAggregatePaginate);
 
 export const Video = mongoose.model("Video", videoSchema);
