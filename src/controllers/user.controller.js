@@ -69,4 +69,93 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, newUser, "User registered Successfully"));
 });
 
-export { registerUser };
+const generateTokens = async (user) => {
+  try {
+    const accessToken = user.generateAccessToken();
+    const refereshToken = user.generateRefreshToken();
+
+    user.refereshToken = refereshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return {
+      accessToken,
+      refereshToken,
+    };
+  } catch (error) {
+    throw new ApiError(500, "Unable to generate refresh and access tokens");
+  }
+};
+
+const loginUser = asyncHandler(async (req, res) => {
+  //get the fields from the request
+  const { username, email, password } = req.body;
+
+  // validation - no empty and formatting
+  if (!username || !email) {
+    throw new ApiError(400, "username or email is required");
+  }
+  validateUserFields([password]); // check if password is empty string
+
+  //find if user is there in the db (using email or username)
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  if (!user) throw new ApiError(404, "User not found!");
+
+  //check if password is correct
+  const isPasswordValidated = await user.isPasswordCorrect(password);
+  if (!isPasswordValidated) throw new ApiError(401, "Password does not match!");
+
+  //generate access token and refresh tokens
+  const { accessToken, refereshToken } = await generateTokens(user);
+
+  //send tokens as cookies to the user
+  const responseUser = user.select("-password -refreshtoken");
+  const options = {
+    httpOnlu: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refereshToken, options)
+    .json(
+      new ApiResponse(200, {
+        user: responseUser,
+        accessToken,
+        refereshToken,
+      }),
+      "User logged in Successfully",
+    );
+
+  //store refresh token to the db
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refereshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  const options = {
+    httpOnlu: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User Logged Out "));
+});
+
+export { registerUser, loginUser, logoutUser };
