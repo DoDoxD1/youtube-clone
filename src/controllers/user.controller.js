@@ -82,7 +82,10 @@ const generateTokens = async (user) => {
       refereshToken,
     };
   } catch (error) {
-    throw new ApiError(500, "Unable to generate refresh and access tokens");
+    throw new ApiError(
+      500,
+      error.message || "Unable to generate refresh and access tokens: ",
+    );
   }
 };
 
@@ -91,7 +94,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
   // validation - no empty and formatting
-  if (!username || !email) {
+  if (!(username || email)) {
     throw new ApiError(400, "username or email is required");
   }
   validateUserFields([password]); // check if password is empty string
@@ -111,9 +114,11 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refereshToken } = await generateTokens(user);
 
   //send tokens as cookies to the user
-  const responseUser = user.select("-password -refreshtoken");
+  const responseUser = await User.findById(user._id).select(
+    "-password -refreshtoken",
+  );
   const options = {
-    httpOnlu: true,
+    httpOnly: true,
     secure: true,
   };
 
@@ -122,12 +127,15 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refereshToken, options)
     .json(
-      new ApiResponse(200, {
-        user: responseUser,
-        accessToken,
-        refereshToken,
-      }),
-      "User logged in Successfully",
+      new ApiResponse(
+        200,
+        {
+          user: responseUser,
+          accessToken,
+          refereshToken,
+        },
+        "User logged in Successfully",
+      ),
     );
 
   //store refresh token to the db
@@ -147,7 +155,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   );
 
   const options = {
-    httpOnlu: true,
+    httpOnly: true,
     secure: true,
   };
 
