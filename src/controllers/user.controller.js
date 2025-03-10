@@ -43,12 +43,12 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
 
-  if (!avatarLocalPath) throw new ApiError(400, "Avatart image is required");
+  if (!avatarLocalPath) throw new ApiError(400, "Avatar image is required");
 
   // upload files to cloudinary
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if (!avatar) throw new ApiError(400, "Avatart image is required");
+  if (!avatar) throw new ApiError(400, "Avatar image is required");
 
   // create user object - create entry in mongodb
   const user = await User.create({
@@ -253,7 +253,7 @@ const updateUser = asyncHandler(async (req, res) => {
     validateUserFields([fullName]);
   }
 
-  // find the user from the db
+  // find the user from the db and update
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -269,6 +269,56 @@ const updateUser = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, user, "User updated"));
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  // check if avatar is there in the request
+  const avatar = req.file?.path;
+  if (!avatar) {
+    throw new ApiError(400, "Avatar image is required");
+  }
+
+  // get the user from the db
+  const user = await User.findById(req.user?._id);
+  if (!user) throw new ApiError(404, "User not found");
+
+  // upload the avatar to cloudinary
+  const avatarUrl = await uploadOnCloudinary(avatar);
+  if (!avatarUrl)
+    throw new ApiError(500, "Unable to upload avatar to cloudinary");
+
+  // update the avatar in the db
+  user.avatar = avatarUrl.url;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json(new ApiResponse(200, {}, "Avatar updated"));
+});
+
+const updateCoverImg = asyncHandler(async (req, res) => {
+  // check if CoverImg is there in the request
+  const CoverImg = req.file?.path;
+  if (!CoverImg) {
+    throw new ApiError(400, "Cover Image is required");
+  }
+
+  // upload the CoverImg to cloudinary
+  const CoverImgUrl = await uploadOnCloudinary(CoverImg);
+  if (!CoverImgUrl)
+    throw new ApiError(500, "Unable to upload Cover Image to cloudinary");
+
+  // update the CoverImg in the db
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: CoverImgUrl.url,
+      },
+    },
+    { new: true },
+  ).select("-password -refreshToken");
+  if (!user) throw new ApiError(404, "User not found");
+
+  res.status(200).json(new ApiResponse(200, {}, "Cover Image updated"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -277,4 +327,6 @@ export {
   changePassword,
   getCurrentUser,
   updateUser,
+  updateAvatar,
+  updateCoverImg,
 };
