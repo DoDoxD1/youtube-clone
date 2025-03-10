@@ -231,12 +231,42 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select(
+  const user = await User.findById(req.user?._id).select(
     "-password -refreshToken",
   );
   if (!user) throw new ApiError(404, "User not found");
 
   return res.status(200).json(new ApiResponse(200, user, "User found"));
+});
+
+const updateUser = asyncHandler(async (req, res) => {
+  // get the fields from the request
+  const { fullName, email } = req.body;
+  if (!(fullName || email)) {
+    throw new ApiError(400, "Provide at least one field to update");
+  }
+  if (email) {
+    validateEmail(email);
+    validateUserFields([email]);
+  }
+  if (fullName) {
+    validateUserFields([fullName]);
+  }
+
+  // find the user from the db
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        fullName,
+        email,
+      },
+    },
+    { new: true },
+  ).select("-password -refreshToken");
+  if (!user) throw new ApiError(404, "User not found");
+
+  res.status(200).json(new ApiResponse(200, user, "User updated"));
 });
 
 export {
@@ -246,4 +276,5 @@ export {
   refreshAccessToken,
   changePassword,
   getCurrentUser,
+  updateUser,
 };
