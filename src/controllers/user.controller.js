@@ -5,7 +5,10 @@ import {
 } from "../validators/user.validator.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadOnCloudinary } from "../utils/Cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/Cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -280,6 +283,14 @@ const updateAvatar = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user?._id);
   if (!user) throw new ApiError(404, "User not found");
 
+  // delete old file from cloudinary
+  const response = await deleteFromCloudinary(user.avatar);
+  if (!response)
+    throw new ApiError(
+      500,
+      "Unable to delete old avatar image from cloudinary",
+    );
+
   // upload the avatar to cloudinary
   const avatarUrl = await uploadOnCloudinary(avatar);
   if (!avatarUrl)
@@ -298,6 +309,18 @@ const updateCoverImg = asyncHandler(async (req, res) => {
   if (!CoverImg) {
     throw new ApiError(400, "Cover Image is required");
   }
+
+  // get the user from the db
+  const oldUser = await User.findById(req.user?._id);
+  if (!oldUser) throw new ApiError(404, "User not found");
+
+  // delete old file from cloudinary
+  const response = await deleteFromCloudinary(oldUser.coverImage);
+  if (!response)
+    throw new ApiError(
+      500,
+      "Unable to delete old avatar image from cloudinary",
+    );
 
   // upload the CoverImg to cloudinary
   const CoverImgUrl = await uploadOnCloudinary(CoverImg);
