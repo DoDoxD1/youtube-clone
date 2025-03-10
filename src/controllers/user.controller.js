@@ -7,6 +7,12 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+
+const options = {
+  httpOnly: true,
+  secure: true,
+};
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend
@@ -72,14 +78,14 @@ const registerUser = asyncHandler(async (req, res) => {
 const generateTokens = async (user) => {
   try {
     const accessToken = user.generateAccessToken();
-    const refereshToken = user.generateRefreshToken();
+    const refreshToken = user.generateRefreshToken();
 
-    user.refereshToken = refereshToken;
+    user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
     return {
       accessToken,
-      refereshToken,
+      refreshToken,
     };
   } catch (error) {
     throw new ApiError(
@@ -111,28 +117,24 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValidated) throw new ApiError(401, "Password does not match!");
 
   //generate access token and refresh tokens
-  const { accessToken, refereshToken } = await generateTokens(user);
+  const { accessToken, refreshToken } = await generateTokens(user);
 
   //send tokens as cookies to the user
   const responseUser = await User.findById(user._id).select(
-    "-password -refreshtoken",
+    "-refreshToken -password",
   );
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
 
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refereshToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
         {
           user: responseUser,
           accessToken,
-          refereshToken,
+          refreshToken,
         },
         "User logged in Successfully",
       ),
@@ -146,18 +148,13 @@ const logoutUser = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $set: {
-        refereshToken: undefined,
+        refreshToken: undefined,
       },
     },
     {
       new: true,
     },
   );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
 
   return res
     .status(200)
@@ -166,4 +163,43 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User Logged Out "));
 });
 
-export { registerUser, loginUser, logoutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  // getting refresh token from the cookies
+  const token = req.cookies.refreshToken || req.body.refreshToken;
+  if (!token) throw new ApiError(401, "Unauthorized request");
+
+  try {
+    // decode the token using jwt lib
+    const decodedToken = await jwt.verify(
+      token,
+      process.env.REFRESH_TOKEN_SECRET,
+    );
+
+    // query the db to get the user and remove sensitive info from there
+    const user = await User.findById(decodedToken?._id).select("-password");
+    if (!user) throw new ApiError(401, "Invalid Refresh Token");
+
+    // checking if refresh tokens are equal
+    if (token !== user?.refreshToken)
+      throw new ApiError(401, "Refresh token is expired or invalid");
+
+    // generating new refresh tokens
+    const { accessToken, refreshToken } = await generateTokens(user);
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken },
+          "Access token refreshed",
+        ),
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh token");
+  }
+});
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };
