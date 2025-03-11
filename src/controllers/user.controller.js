@@ -348,7 +348,7 @@ const updateCoverImg = asyncHandler(async (req, res) => {
 });
 
 const getUserChannel = asyncHandler(async (req, res) => {
-  const { username } = req.body;
+  const { username } = req.params;
   if (!username) throw new ApiError(400, "Username is missing");
 
   const channel = await User.aggregate([
