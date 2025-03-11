@@ -11,6 +11,7 @@ import {
 } from "../utils/Cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import { Subscription } from "../models/subscription.model.js";
 
 const options = {
   httpOnly: true,
@@ -244,7 +245,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   // get the fields from the request
-  const { fullName, email } = req.body;
+  let { fullName, email } = req.body;
   if (!(fullName || email)) {
     throw new ApiError(400, "Provide at least one field to update");
   }
@@ -255,6 +256,9 @@ const updateUser = asyncHandler(async (req, res) => {
   if (fullName) {
     validateUserFields([fullName]);
   }
+
+  if (email.trim() === "") email = req.user?.email;
+  if (fullName.trim() === "") fullName = req.user?.fullName;
 
   // find the user from the db and update
   const user = await User.findByIdAndUpdate(
@@ -343,7 +347,7 @@ const updateCoverImg = asyncHandler(async (req, res) => {
 });
 
 const getUserChannel = asyncHandler(async (req, res) => {
-  const { username } = req.prams;
+  const { username } = req.body;
   if (!username) throw new ApiError(400, "Username is missing");
 
   const channel = await User.aggregate([
@@ -396,6 +400,7 @@ const getUserChannel = asyncHandler(async (req, res) => {
         isSubscribed: 1,
         avatar: 1,
         coverImage: 1,
+        _id: 1,
       },
     },
   ]);
@@ -409,6 +414,35 @@ const getUserChannel = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, channel[0], "channel data extracted"));
 });
 
+const subscribeChannel = asyncHandler(async (req, res) => {
+  const { channel } = req.body;
+  if (!channel) throw new ApiError(401, "Channel is required!");
+
+  // user with the id
+  const channelUser = await User.findById(channel._id).select(
+    "-password -refreshToken",
+  );
+  if (!channelUser) throw new ApiError(404, "Channel not found!");
+
+  // create a subscription doc
+  const subscription = await Subscription.create({
+    subscriber: req.user?._id,
+    channel: channelUser?._id,
+  });
+
+  // fetch newly created subscription from the db
+  const newSubscription = await Subscription.findById(subscription._id);
+
+  // is user exists return response
+  if (!newSubscription) {
+    throw new ApiError(500, "Something went wrong while subscribing");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, newSubscription, "Subscribed successfully!"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -420,4 +454,5 @@ export {
   updateAvatar,
   updateCoverImg,
   getUserChannel,
+  subscribeChannel,
 };
