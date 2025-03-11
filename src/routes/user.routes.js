@@ -33,6 +33,7 @@ router.route("/register").post(
 );
 
 router.route("/login").post(loginUser);
+router.route("/c/:username").get(getUserChannel);
 
 // secured routes
 router.route("/logout").post(verifyJWT, logoutUser);
@@ -46,7 +47,6 @@ router
 router
   .route("/update-cover-img")
   .patch(verifyJWT, upload.single("coverImage"), updateCoverImg);
-router.route("/c/:username").get(verifyJWT, getUserChannel);
 router.route("/history").get(verifyJWT, getWatchHistory);
 router.route("/subscribe-channel").post(verifyJWT, subscribeChannel);
 
