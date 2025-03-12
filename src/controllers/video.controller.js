@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -100,7 +101,37 @@ const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   if (!videoId || videoId === "") throw new ApiError(400, "Video Id required");
 
-  const video = await Video.findById(videoId);
+  const video = await Video.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(`${videoId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "User",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
+      },
+    },
+  ]);
   if (!video) throw new ApiError(404, "Video not found!");
 
   return res
@@ -115,7 +146,8 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   // check if user is the owner of the video
   const video = await Video.findById(videoId);
-  if (!video?.owner === userId)
+
+  if (!(userId === video?.owner))
     throw new ApiError(400, "Only the author/publisher can delete the video");
 
   // delete the video from cloudinary
