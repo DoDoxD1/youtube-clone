@@ -302,7 +302,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, "User not found");
 
   // delete old file from cloudinary
-  const response = await deleteFromCloudinary(user.avatar);
+  const response = await deleteFromCloudinary(user.avatar, "image");
   if (!response)
     throw new ApiError(
       500,
@@ -333,7 +333,7 @@ const updateCoverImg = asyncHandler(async (req, res) => {
   if (!oldUser) throw new ApiError(404, "User not found");
 
   // delete old file from cloudinary
-  const response = await deleteFromCloudinary(oldUser.coverImage);
+  const response = await deleteFromCloudinary(oldUser.coverImage, "image");
   if (!response)
     throw new ApiError(
       500,

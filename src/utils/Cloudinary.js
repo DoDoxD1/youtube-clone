@@ -39,15 +39,14 @@ const extractPublicId = (url) => {
   let publicId = urlParts.slice(uploadIndex + 1).join("/");
   publicId = publicId.replace(/v\d+\//, ""); // Remove version
   publicId = publicId.replace(/\.[^/.]+$/, ""); // Remove file extension
-
   return publicId;
 };
 
-const deleteFromCloudinary = async (url) => {
+const deleteFromCloudinary = async (url, type) => {
   try {
-    const response = cloudinary.uploader.destroy(
+    const response = await cloudinary.uploader.destroy(
       extractPublicId(url),
-      { invalidate: true },
+      { invalidate: true, resource_type: type },
       function (result) {
         console.log(result);
       },
