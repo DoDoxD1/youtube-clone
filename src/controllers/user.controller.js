@@ -39,6 +39,13 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.files?.avatar[0]?.path;
   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
+  // check the file format for avatar
+  if (!isImage(avatarLocalPath))
+    throw new ApiError(
+      400,
+      "Avatar image File should be of type: '.gif', '.jpg', '.jpeg', '.png'",
+    );
+
   let coverImageLocalPath = null;
   if (
     req.files &&
@@ -46,6 +53,12 @@ const registerUser = asyncHandler(async (req, res) => {
     req.files.coverImage.length > 0
   ) {
     coverImageLocalPath = req.files.coverImage[0].path;
+    // check the file format for cover image
+    if (!isImage(coverImageLocalPath))
+      throw new ApiError(
+        400,
+        "Cover image File should be of type: '.gif', '.jpg', '.jpeg', '.png'",
+      );
   }
 
   if (!avatarLocalPath) throw new ApiError(400, "Avatar image is required");
