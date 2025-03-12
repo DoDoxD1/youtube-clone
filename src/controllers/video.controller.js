@@ -146,8 +146,9 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   // check if user is the owner of the video
   const video = await Video.findById(videoId);
+  if (!video) throw new ApiError(400, "Video not found!");
 
-  if (!(userId === video?.owner))
+  if (!userId.equals(video?.owner))
     throw new ApiError(400, "Only the author/publisher can delete the video");
 
   // delete the video from cloudinary
@@ -170,6 +171,46 @@ const deleteVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Video deleted successfully"));
 });
 
-const updateVideo = asyncHandler(async (req, res) => {});
+const updateVideo = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { videoId } = req.params;
+  if (!videoId || videoId === "") throw new ApiError(400, "Video Id required");
+
+  // check if user is the owner of the video
+  const video = await Video.findById(videoId);
+  if (!video) throw new ApiError(400, "Video not found!");
+
+  if (!userId.equals(video?.owner))
+    throw new ApiError(400, "Only the author/publisher can edit the video");
+
+  // get new details
+  let { title, description } = req.body;
+  //if new details are empty set old
+  if (!title || title === "") title = video.title;
+  if (!description || description === "") description = video.description;
+
+  let thumbnailLocalPath = req.file?.path;
+  let thumbnail = null;
+  if (thumbnailLocalPath || thumbnailLocalPath !== "") {
+    thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const response = await deleteFromCloudinary(video.thumbnail, "image");
+  }
+
+  const newVideo = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        title,
+        description,
+        thumbnail: thumbnail.url || video.thumbnail,
+      },
+    },
+    { new: true },
+  );
+
+  if (!newVideo) throw new ApiError(404, "Video not found");
+
+  res.status(200).json(new ApiResponse(200, newVideo, "Video updated"));
+});
 
 export { getAllVideos, uploadVideo, getVideoById, deleteVideo, updateVideo };
