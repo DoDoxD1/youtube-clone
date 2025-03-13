@@ -43,7 +43,87 @@ const createPlaylist = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, newPlaylist, "Playlist created successfully!"));
 });
-const getUserPlaylists = asyncHandler(async (req, res) => {});
+
+const getUserPlaylists = asyncHandler(async (req, res) => {
+  // get user id
+  const userId = req.user?._id;
+
+  // fetch all the playlist of user
+  const playlists = await Playlist.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(`${userId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videos",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+              coverImage: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
+      },
+    },
+  ]);
+
+  // if  playlists are fetched return
+  if (!playlists) throw new ApiError(400, "Unable to get playlist for user");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlists, "Playlists fetched Successfully!"));
+});
+
 const getPlayListById = asyncHandler(async (req, res) => {});
 const updatePlaylist = asyncHandler(async (req, res) => {});
 const deletePlaylist = asyncHandler(async (req, res) => {});
