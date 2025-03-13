@@ -124,7 +124,90 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, playlists, "Playlists fetched Successfully!"));
 });
 
-const getPlayListById = asyncHandler(async (req, res) => {});
+const getPlayListById = asyncHandler(async (req, res) => {
+  // get playlist id
+  const { playlistId } = req.params;
+  if (!playlistId || playlistId === "")
+    throw new ApiError(400, "Playlist Id required");
+
+  if (!isValidObjectId(playlistId))
+    throw new ApiError(401, "Inavlid playlist id");
+
+  // fetch playlist from db
+  const playlist = await Playlist.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(`${playlistId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videos",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+              coverImage: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
+      },
+    },
+  ]);
+
+  if (!playlist) throw new ApiError(404, "Playlist not found!");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "Playlist fetched successfully!"));
+});
 const updatePlaylist = asyncHandler(async (req, res) => {});
 const deletePlaylist = asyncHandler(async (req, res) => {});
 const addVideoToPlaylist = asyncHandler(async (req, res) => {});
