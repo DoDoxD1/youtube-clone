@@ -208,9 +208,113 @@ const getPlayListById = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, playlist, "Playlist fetched successfully!"));
 });
-const updatePlaylist = asyncHandler(async (req, res) => {});
+
+const updatePlaylist = asyncHandler(async (req, res) => {
+  // get the playlist
+  const { playlistId } = req.params;
+  if (!playlistId || playlistId === "")
+    throw new ApiError(400, "Playlist id is required");
+
+  const playlist = await Playlist.findById(playlistId);
+  if (!playlist) throw new ApiError(404, "Playlist not found!");
+
+  // get new title and description from the req body
+  const { name, description } = req.body;
+  // console.log(req);
+  if (!name && !description) {
+    throw new ApiError(
+      400,
+      "Provide atleast one parameter(name/description) to update",
+    );
+  }
+
+  // update playlist and return
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(playlist._id, {
+    $set: {
+      name: name === "" ? "Untitled" : name,
+      description,
+    },
+  });
+
+  const newPlaylist = await Playlist.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(`${playlistId}`),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "videos",
+        foreignField: "_id",
+        as: "videos",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+              coverImage: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
+      },
+    },
+  ]);
+
+  if (!newPlaylist) throw new ApiError(500, "Unable to update playlist");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newPlaylist, "Playlist updated successfully"));
+});
+
 const deletePlaylist = asyncHandler(async (req, res) => {});
+
 const addVideoToPlaylist = asyncHandler(async (req, res) => {});
+
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {});
 
 export {
