@@ -39,7 +39,7 @@ docker run --env-file .env -p 3000:3000 dodoxd/watchly
 ```
 
 > Replace `3000:3000` with your desired port if needed.\
-> Create a .env file using below mentioned environment configuration.
+> Create a .env file using the mentioned environment configuration.
 
 ---
 
@@ -88,7 +88,7 @@ CLOUDINARY_API_SECRET=cloudinary-api-secret
 http://localhost:3000/api/v1/
 ```
 
-> Replace `3000` with your port if changed.\
+> Replace `3000` with your port if changed.
 
 ### 📅 **User APIs**
 
