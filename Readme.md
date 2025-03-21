@@ -176,4 +176,7 @@ I am open to suggestions and feedback to improve this project. Feel free to crea
 - [Model Link](https://app.eraser.io/workspace/PPyNjTJxIaBBEM5Jqmgv)
 - Dockerised version will be added soon.
 - API docs comming soon.
+<<<<<<< HEAD
+>>>>>>> d404f8b73d092471bb15a89dd4f296fe1ff20d12
+=======
 >>>>>>> d404f8b73d092471bb15a89dd4f296fe1ff20d12
