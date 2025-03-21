@@ -2,6 +2,7 @@
 
 ## 📋 Description
 
+<<<<<<< HEAD
 This project is YouTube Clone REST API built with Node.js. It replicates core functionalities of YouTube and provides secure authentication using JWT. Fully containerized and available on Docker Hub for easy deployment.
 
 ---
@@ -171,3 +172,8 @@ http://localhost:3000/api/v1/
 I am open to suggestions and feedback to improve this project. Feel free to create an issue or reach out!
 
 ---
+=======
+- [Model Link](https://app.eraser.io/workspace/PPyNjTJxIaBBEM5Jqmgv)
+- Dockerised version will be added soon.
+- API docs comming soon.
+>>>>>>> d404f8b73d092471bb15a89dd4f296fe1ff20d12
