@@ -2,7 +2,6 @@
 
 ## 📋 Description
 
-<<<<<<< HEAD
 This project is YouTube Clone REST API built with Node.js. It replicates core functionalities of YouTube and provides secure authentication using JWT. Fully containerized and available on Docker Hub for easy deployment.
 
 ---
@@ -33,6 +32,9 @@ This project is YouTube Clone REST API built with Node.js. It replicates core fu
 
 ```bash
 docker pull dodoxd/watchly
+```
+
+```bash
 docker run --env-file .env -p 3000:3000 dodoxd/watchly
 ```
 
@@ -41,10 +43,19 @@ docker run --env-file .env -p 3000:3000 dodoxd/watchly
 
 ---
 
-## 💾 Run Locally (Optional)
+## 💾 Install and Run Locally (Optional)
 
 ```bash
 npm install
+```
+
+```bash
+npm run start
+```
+
+✅ Run in dev mode
+
+```bash
 npm run dev
 ```
 
@@ -172,11 +183,3 @@ http://localhost:3000/api/v1/
 I am open to suggestions and feedback to improve this project. Feel free to create an issue or reach out!
 
 ---
-=======
-- [Model Link](https://app.eraser.io/workspace/PPyNjTJxIaBBEM5Jqmgv)
-- Dockerised version will be added soon.
-- API docs comming soon.
-<<<<<<< HEAD
->>>>>>> d404f8b73d092471bb15a89dd4f296fe1ff20d12
-=======
->>>>>>> d404f8b73d092471bb15a89dd4f296fe1ff20d12
