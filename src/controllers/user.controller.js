@@ -13,6 +13,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { Subscription } from "../models/subscription.model.js";
 import mongoose from "mongoose";
+import { isImage } from "../validators/video.validator.js";
 
 const options = {
   httpOnly: true,
@@ -66,7 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // upload files to cloudinary
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if (!avatar) throw new ApiError(400, "Avatar image is required");
+  if (!avatar) throw new ApiError(500, "Unable to upload avatar image");
 
   // create user object - create entry in mongodb
   const user = await User.create({
@@ -333,12 +334,9 @@ const updateCoverImg = asyncHandler(async (req, res) => {
   if (!oldUser) throw new ApiError(404, "User not found");
 
   // delete old file from cloudinary
-  const response = await deleteFromCloudinary(oldUser.coverImage, "image");
-  if (!response)
-    throw new ApiError(
-      500,
-      "Unable to delete old avatar image from cloudinary",
-    );
+  await deleteFromCloudinary(oldUser.coverImage, "image");
+  // if (!response)
+  //   throw new ApiError(500, "Unable to delete old cover image from cloudinary");
 
   // upload the CoverImg to cloudinary
   const CoverImgUrl = await uploadOnCloudinary(CoverImg);

@@ -86,6 +86,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
 });
 
 const getChannelVideos = asyncHandler(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(`${req.user?._id}`);
   const videos = await Video.find({
     owner: userId,
   });
