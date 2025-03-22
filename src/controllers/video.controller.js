@@ -8,6 +8,7 @@ import {
   uploadOnCloudinary,
 } from "../utils/Cloudinary.js";
 import { isImage, isVideo } from "../validators/video.validator.js";
+import OpenAI, { APIError } from "openai";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const videos = await Video.find();
@@ -213,4 +214,65 @@ const updateVideo = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, newVideo, "Video updated"));
 });
 
-export { getAllVideos, uploadVideo, getVideoById, deleteVideo, updateVideo };
+const generateAiDescription = asyncHandler(async (req, res) => {
+  const { videoTitle } = req.body;
+
+  if (!videoTitle || videoTitle === "")
+    throw new APIError(400, "VideoTitle is required.");
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const completion = openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    store: true,
+    messages: [
+      {
+        role: "user",
+        content: `You are a professional YouTube content strategist and SEO expert. Based on the video title provided, generate a highly engaging, SEO-optimized YouTube video description. The description should:
+  
+  ✅ Include relevant keywords naturally for YouTube search optimization
+  ✅ Encourage viewers to like, comment, and subscribe
+  ✅ Include hashtags related to the video content
+  ✅ Summarize the video in a way that maximizes watch time and CTR (Click-Through Rate)
+  ✅ Be written in a conversational, audience-friendly tone
+  ✅ Include a call-to-action to watch till the end
+  ✅ Ensure it aligns with the YouTube algorithm's best practices for discoverability and ranking
+  ✅ Answer directly without any description tag or heading
+  
+  Video Title: ${videoTitle}
+  
+  Your Output: A complete, ready-to-use YouTube video description optimized for SEO and maximum reach.`,
+      },
+    ],
+  });
+
+  completion
+    .then((result) => {
+      let description = result.choices[0].message.content;
+      description = description.replaceAll(/\n/g, "\n");
+      description = description.replaceAll("**", "");
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            description,
+            "Description fetched successfully!",
+          ),
+        );
+    })
+    .catch((e) => {
+      throw new ApiError(400, "Error occured while openAI Api call", e);
+    });
+});
+
+export {
+  getAllVideos,
+  uploadVideo,
+  getVideoById,
+  deleteVideo,
+  updateVideo,
+  generateAiDescription,
+};

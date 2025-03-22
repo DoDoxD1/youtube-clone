@@ -6,6 +6,7 @@ import {
   getVideoById,
   updateVideo,
   uploadVideo,
+  generateAiDescription,
 } from "../controllers/video.controller.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
 
@@ -34,5 +35,7 @@ router
   .get(getVideoById)
   .delete(verifyJWT, deleteVideo)
   .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
+
+router.route("/generate-ai-desc").get(verifyJWT, generateAiDescription);
 
 export default router;
