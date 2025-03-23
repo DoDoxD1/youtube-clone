@@ -8,6 +8,7 @@ This project is YouTube Clone REST API built with Node.js. It replicates core fu
 
 ## 🚀 Features
 
+✅ AI Integration\
 ✅ JWT Authentication\
 ✅ RESTful API\
 ✅ Dockerized & Hosted on Docker Hub\
@@ -74,6 +75,7 @@ REFRESH_TOKEN_EXPIRY=10d
 CLOUDINARY_CLOUD_NAME=cloudinary-cloud-name
 CLOUDINARY_API_KEY=cloudinary-api-key
 CLOUDINARY_API_SECRET=cloudinary-api-secret
+OPENAI_API_KEY=openai-api-key
 ```
 
 ✅ **Note:** Never commit real secrets to GitHub.
@@ -109,13 +111,14 @@ http://localhost:3000/api/v1/
 
 ### 📽 **Video APIs**
 
-| Method | Endpoint             | Description          |
-| ------ | -------------------- | -------------------- |
-| GET    | `/videos`            | Get all videos       |
-| POST   | `/videos`            | Publish a new video  |
-| GET    | `/videos/v/:videoId` | Get video by ID      |
-| DELETE | `/videos/v/:videoId` | Delete video by ID   |
-| PATCH  | `/videos/v/:videoId` | Update video details |
+| Method | Endpoint                   | Description                        |
+| ------ | -------------------------- | ---------------------------------- |
+| GET    | `/videos`                  | Get all videos                     |
+| POST   | `/videos`                  | Publish a new video                |
+| GET    | `/videos/v/:videoId`       | Get video by ID                    |
+| DELETE | `/videos/v/:videoId`       | Delete video by ID                 |
+| PATCH  | `/videos/v/:videoId`       | Update video details               |
+| GET    | `/videos/generate-ai-desc` | Get AI-Generated Video Description |
 
 ### 🔍 **Playlist APIs**
 
