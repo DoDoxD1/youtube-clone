@@ -176,7 +176,6 @@ http://localhost:3000/api/v1/
 
 ## 🚀 Upcoming Features
 
-✅ Ai Description\
 ✅ Frontend Clone
 
 ---
