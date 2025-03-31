@@ -166,6 +166,15 @@ http://localhost:3000/api/v1/
 | GET    | `/dashboard/videos` | Get dashboard videos |
 | GET    | `/dashboard/stats`  | Get dashboard stats  |
 
+### 👇 **Category APIs**
+
+| Method | Endpoint           | Description           |
+| ------ | ------------------ | --------------------- |
+| GET    | `/category/all`    | Get all categories    |
+| POST   | `/category/add`    | Create a new category |
+| PATCH  | `/category/modify` | Update category name  |
+| DELETE | `/category/remove` | Delete category       |
+
 ### ❤️ **Health Check**
 
 | Method | Endpoint       | Description      |
