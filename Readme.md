@@ -168,6 +168,8 @@ http://localhost:3000/api/v1/
 
 ### 👇 **Category APIs**
 
+✅ **Note:** Only admin user can modify, add or remove a category.
+
 | Method | Endpoint           | Description           |
 | ------ | ------------------ | --------------------- |
 | GET    | `/category/all`    | Get all categories    |
@@ -186,6 +188,8 @@ http://localhost:3000/api/v1/
 ## 🚀 Upcoming Features
 
 ✅ Frontend Clone
+
+👉 [https://github.com/DoDoxD1/yt-clone-fullstack](https://github.com/DoDoxD1/yt-clone-fullstack)
 
 ---
 
