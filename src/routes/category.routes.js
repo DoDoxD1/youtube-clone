@@ -5,12 +5,13 @@ import {
   modifyCategory,
   removeCategory,
 } from "../controllers/category.controller.js";
+import { verifyAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 router.route("/all").get(getAllCategories);
-router.route("/add").post(addCategory);
-router.route("/remove").delete(removeCategory);
-router.route("/modify").patch(modifyCategory);
+router.route("/add").post(verifyAdmin, addCategory);
+router.route("/remove").delete(verifyAdmin, removeCategory);
+router.route("/modify").patch(verifyAdmin, modifyCategory);
 
 export default router;

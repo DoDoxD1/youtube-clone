@@ -42,6 +42,11 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    admin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     refreshToken: {
       type: String,
     },
