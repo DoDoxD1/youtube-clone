@@ -7,6 +7,7 @@ import {
   updateVideo,
   uploadVideo,
   generateAiDescription,
+  uploadMockVideo,
 } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -29,6 +30,8 @@ router
     ]),
     uploadVideo,
   );
+
+router.route("/mock-video").post(verifyJWT, uploadMockVideo);
 
 router
   .route("/v/:videoId")

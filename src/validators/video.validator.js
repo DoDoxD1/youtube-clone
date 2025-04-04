@@ -2,9 +2,10 @@ const videoExtensions = [".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".mp4"];
 const imageExtensions = [".gif", ".jpeg", ".png", ".jpg"];
 const isImage = (v) => {
   let status;
-  imageExtensions.map((e) => {
-    status = v.includes(e);
-  });
+  // imageExtensions.map((e) => {
+  //   status = v.includes(e);
+  // });
+  status = true;
   return status;
 };
 const isVideo = (v) => {

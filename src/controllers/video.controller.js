@@ -268,6 +268,38 @@ const generateAiDescription = asyncHandler(async (req, res) => {
     });
 });
 
+const uploadMockVideo = asyncHandler(async (req, res) => {
+  //user should be login to upload the video
+  const owner = req.user?._id;
+  if (!owner) throw new ApiError(400, "Unauthorised request!");
+
+  // get details from req body
+  let { title, isPublished } = req.body;
+
+  if (!title || title === "") title = "Untitled";
+
+  // create a video object
+  const video = await Video.create({
+    videoFile: "zz",
+    thumbnail: "x",
+    owner,
+    title,
+    isPublished: isPublished || false,
+    duration: 100,
+  });
+
+  // fetch newly created video
+  const newVideo = await Video.findById(video._id);
+
+  if (!newVideo)
+    throw new ApiError(500, "Something went wrong while uploading video");
+
+  // return response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newVideo, "Video uploaded successfully!"));
+});
+
 export {
   getAllVideos,
   uploadVideo,
@@ -275,4 +307,5 @@ export {
   deleteVideo,
   updateVideo,
   generateAiDescription,
+  uploadMockVideo,
 };
