@@ -6,7 +6,7 @@ const videoSchema = new Schema(
     videoFile: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     thumbnail: {
       type: String,
@@ -32,6 +32,28 @@ const videoSchema = new Schema(
     views: {
       type: Number,
       default: 0,
+    },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      default: "67efcd21085c9d13584e00af",
+      enum: [
+        "Cars and vehicles",
+        "Comedy",
+        "Education",
+        "Gaming",
+        "Entertainment",
+        "Film and animation",
+        "How-to and style",
+        "Music",
+        "News and politics",
+        "People and blogs",
+        "Pets and animals",
+        "Science and technology",
+        "Sports",
+        "Travel and events",
+        "Uncategorised",
+      ],
     },
     isPublished: {
       type: Boolean,

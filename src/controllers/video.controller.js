@@ -11,12 +11,51 @@ import { isImage, isVideo } from "../validators/video.validator.js";
 import OpenAI, { APIError } from "openai";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const videos = await Video.find();
+  // Parse query parameters with defaults
+  const limit = parseInt(req.query.limit) || 10;
+  const cursorId = req.query.cursor; // The ID of the last item from previous page
+  const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+  // Build query based on cursor
+  const query = {};
+  if (cursorId) {
+    // If sorting in descending order (newest first)
+    if (sortOrder === -1) {
+      query._id = { $lt: new mongoose.Types.ObjectId(`${cursorId}`) };
+    } else {
+      // If sorting in ascending order (oldest first)
+      query._id = { $gt: new mongoose.Types.ObjectId(`${cursorId}`) };
+    }
+  }
+
+  const videos = await Video.find(query)
+    .sort({ _id: sortOrder })
+    .limit(limit + 1); // Get one extra to check if there's more
   if (!videos) throw new ApiError(404, "Videos not found");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, videos, "Videos fetched successfully!"));
+  // Check if there are more results
+  const hasMore = videos.length > limit;
+  const results = hasMore ? videos.slice(0, limit) : videos;
+
+  // remove extra video
+  videos.pop();
+
+  // Get the new cursor (ID of the last item)
+  const nextCursor = hasMore ? results[results.length - 1]._id : null;
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        data: videos,
+        pagination: {
+          nextCursor,
+          hasMore,
+        },
+      },
+      "Videos fetched successfully!",
+    ),
+  );
 });
 
 const uploadVideo = asyncHandler(async (req, res) => {
