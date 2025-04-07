@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
+import { Category } from "../models/category.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -64,12 +65,16 @@ const uploadVideo = asyncHandler(async (req, res) => {
   if (!owner) throw new ApiError(400, "Unauthorised request!");
 
   // get details from req body
-  const { title, description, isPublished } = req.body;
+  const { title, description, isPublished, category } = req.body;
 
   if (!title || title === "") throw new ApiError(400, "Title can't be empty");
   if (!description || description === "")
     throw new ApiError(400, "Description can't be empty");
 
+  // get category from db
+  const categoryObject = await Category.findOne({title:String(category).charAt(0).toUpperCase() + String(category).slice(1)})
+  if(!categoryObject) throw new APIError(400,"Invalid Category");
+  
   // get video file from multer middleware
   if (
     !(req.files && Array.isArray(req.files.video) && req.files.video.length > 0)
@@ -120,6 +125,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
     thumbnail: thumbnail.url,
     owner,
     title,
+    category: new mongoose.Types.ObjectId(`${categoryObject?._id}`),
     description,
     isPublished: isPublished || false,
     duration: videoFile.duration,

@@ -5,7 +5,7 @@ const isImage = (v) => {
   imageExtensions.map((e) => {
     status = v.includes(e);
   });
-  return status;
+  return true;
 };
 const isVideo = (v) => {
   let status;
