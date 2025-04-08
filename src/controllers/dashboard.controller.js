@@ -104,9 +104,31 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     }
   }
 
-  const videos = await Video.find(query)
-    .sort({ _id: sortOrder })
-    .limit(limit + 1); // Get one extra to check if there's more
+  const videos = await Video.aggregate([
+    { $match: query },
+    { $sort: { _id: sortOrder } },
+    { $limit: limit + 1 }, // Get one extra to check if there's more
+    {
+      $lookup: {
+        from: "categories", // The name of your categories collection
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    },
+    {
+      $addFields: {
+        category: {
+          $arrayElemAt: ["$category.title", 0],
+        },
+      },
+    },
+    {
+      $project: {
+        categoryData: 0, // Remove the intermediate array field
+      },
+    },
+  ]);
   if (!videos) throw new ApiError(404, "Videos not found");
 
   // Check if there are more results
