@@ -60,6 +60,10 @@ const videoSchema = new Schema(
       required: true,
       default: false,
     },
+    videoPreview: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true },
 );

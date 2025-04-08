@@ -72,9 +72,11 @@ const uploadVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Description can't be empty");
 
   // get category from db
-  const categoryObject = await Category.findOne({title:String(category).charAt(0).toUpperCase() + String(category).slice(1)})
-  if(!categoryObject) throw new APIError(400,"Invalid Category");
-  
+  const categoryObject = await Category.findOne({
+    title: String(category).charAt(0).toUpperCase() + String(category).slice(1),
+  });
+  if (!categoryObject) throw new APIError(400, "Invalid Category");
+
   // get video file from multer middleware
   if (
     !(req.files && Array.isArray(req.files.video) && req.files.video.length > 0)
@@ -119,9 +121,18 @@ const uploadVideo = asyncHandler(async (req, res) => {
   if (!thumbnail)
     throw new ApiError(500, "Error while uploading thumbnail to cloud");
 
+  // Extract the public ID from the Cloudinary URL
+  const url = videoFile.url;
+  const publicId = url.split("/").pop()?.split(".")[0];
+  if (!publicId) return url;
+
+  // Create a preview URL with transformations
+  // This will create a 3-second preview with different segments
+  const videoPreview = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/video/upload/e_preview:duration_3/e_preview:duration_3:offset_30/e_preview:duration_3:offset_60/${publicId}.mp4`;
+
   // create a video object
   const video = await Video.create({
-    videoFile: videoFile.url,
+    videoFile: url,
     thumbnail: thumbnail.url,
     owner,
     title,
@@ -129,6 +140,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
     description,
     isPublished: isPublished || false,
     duration: videoFile.duration,
+    videoPreview,
   });
 
   // fetch newly created video
