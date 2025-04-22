@@ -4,7 +4,6 @@ import {
   deleteVideo,
   getAllVideos,
   getVideoById,
-  updateVideo,
   uploadVideo,
   generateAiDescription,
 } from "../controllers/video.controller.js";
@@ -30,11 +29,8 @@ router
     uploadVideo,
   );
 
-router
-  .route("/v/:videoId")
-  .get(getVideoById)
-  .delete(verifyJWT, deleteVideo)
-  .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
+router.route("/v/:videoId").get(getVideoById).delete(verifyJWT, deleteVideo);
+// .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
 
 router.route("/generate-ai-desc").get(verifyJWT, generateAiDescription);
 

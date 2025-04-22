@@ -6,6 +6,10 @@ import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/Cloudinary.js";
 
 const getChannelStats = asyncHandler(async (req, res) => {
   // get total number of views on the channel
@@ -189,9 +193,27 @@ const getChannelVideo = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+        pipeline: [
+          {
+            $project: {
+              title: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
       $addFields: {
         owner: {
           $first: "$owner",
+        },
+        category: {
+          $first: "$category",
         },
       },
     },
@@ -203,4 +225,51 @@ const getChannelVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, video, "Video fetched successfully!"));
 });
 
-export { getChannelStats, getChannelVideos, getChannelVideo };
+const updateChannelVideo = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { videoId } = req.params;
+  if (!videoId || videoId === "") throw new ApiError(400, "Video Id required");
+
+  // check if user is the owner of the video
+  const video = await Video.findById(videoId);
+  if (!video) throw new ApiError(400, "Video not found!");
+
+  if (!userId.equals(video?.owner))
+    throw new ApiError(400, "Only the author/publisher can edit the video");
+
+  // get new details
+  let { title, description } = req.body;
+  //if new details are empty set old
+  if (!title || title === "") title = video.title;
+  if (!description || description === "") description = video.description;
+
+  let thumbnailLocalPath = req.file?.path;
+  let thumbnail = null;
+  if (thumbnailLocalPath || thumbnailLocalPath !== "") {
+    thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const response = await deleteFromCloudinary(video.thumbnail, "image");
+  }
+
+  const newVideo = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        title,
+        description,
+        thumbnail: thumbnail?.url || video.thumbnail,
+      },
+    },
+    { new: true },
+  );
+
+  if (!newVideo) throw new ApiError(404, "Video not found");
+
+  res.status(200).json(new ApiResponse(200, newVideo, "Video updated"));
+});
+
+export {
+  getChannelStats,
+  getChannelVideos,
+  getChannelVideo,
+  updateChannelVideo,
+};
